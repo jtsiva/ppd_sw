@@ -96,6 +96,16 @@ void setup ()
   Serial.begin (9600);
   randomSeed(analogRead(0));
   
+  switchSetup ();
+  
+  if (useRTCForDay ())
+  {
+    if (rtcSetup())
+    {
+      rtcDelay ();
+    }
+  }
+  
   do
   {
     setupSuccessful = true;
@@ -168,14 +178,6 @@ void setup ()
       Serial.println(F("Light sensor setup failed."));
       writeToLog ("Light sensor setup failed."); 
       error (LIGHT_SENSOR_FAILURE);
-      setupSuccessful = false;
-    }
-  
-    //Switches
-    if (!switchSetup()){
-      Serial.println(F("Switch setup failed."));
-      writeToLog("Switch setup failed.");  
-      error (SWITCH_FAILURE);
       setupSuccessful = false;
     }
 
@@ -271,6 +273,24 @@ void loop ()
       start = millis();
     }
   }
+}
+
+//If we are using the RTC we are going to delay
+//booting until it's night (this should help make sure
+//the battery gets a chance to charge)
+void rtcDelay ()
+{
+  unsigned long start = millis ();
+  DateTime now;
+  
+  Serial.println ("waiting to boot!");
+  
+  do
+  {
+    while (15 * MINUTE > millis() - start);
+    now = RTC.now();
+  } while (4 < now.hour() && 20 > now.hour ());
+  
 }
 
 // plays all sounds on the sound SD card for 10 seconds
@@ -625,7 +645,7 @@ void loadSoundAndPatternNames ()
        if (0 != strcmp (buff, "SEAN.MP3") && NULL != strstr(buff, ".MP3"))
        {  
            strncpy (soundFiles[index++], buff, 16);
-           Serial.println(String(buff) + " is available to play");
+           //Serial.println(String(buff) + " is available to play");
        }
     }
     
@@ -669,7 +689,7 @@ void loadSoundAndPatternNames ()
       myFile.getSFN (buff);
 
       strncpy (patternFiles[index++], buff, 16);
-      Serial.println(String(buff) + " is available to use");
+      //Serial.println(String(buff) + " is available to use");
 
     }
     
