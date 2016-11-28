@@ -306,14 +306,7 @@ void loop ()
   unsigned long actionStart;
   struct pattern myPattern;
 
-  if (watchdogActivated)
-  {
-    watchdogActivated = false;
 
-    if (iteration > waitInterval / 8) //each sleep is 8 seconds long
-    { 
-      if (isNight(isSensitive()))
-      {
         //No need to wake these up until we actually need them.
         //It also keeps the speakers from popping at the end of every sleep
         digitalWrite(MAX9744_SHDN, HIGH);
@@ -329,13 +322,9 @@ void loop ()
           {
              failure[MEDIA_SD_CARD_FAILURE] = true; 
           }
-          if (verboseLogging)
-          {
-            writeToLog("Using pattern: " + String (patternFiles[patternIndex]));
-          }
         }
         
-        if (0x2 & mode && 0 == soundInterval)
+        if (0x2 & mode)
         {
           soundIndex = random(0, numSoundFiles);
           
@@ -343,11 +332,6 @@ void loop ()
           {
             volume = getVolume ();
             musicPlayer.setVolume (volume, 100);
-          }
-          
-          if (verboseLogging)
-          {
-            writeToLog("Playing " + String (soundFiles[soundIndex]));
           }
           
           if (!musicPlayer.startPlayingFile(soundFiles[soundIndex]))
@@ -363,59 +347,13 @@ void loop ()
   
         actionStart = millis();
   
-        while (MINUTE / 4 >= millis() - actionStart)
-        {
-          if (MINUTE / 8 <= millis() - actionStart && 0 ==  soundInterval)
-          {
-            musicPlayer.setVolume (100, volume);
-          }
-          
+        while (!musicPlayer.stopped())
+        { 
           if (0x1 & mode)
           { 
             playPattern(myPattern);
           }
         }
-  
-        if (0x2 & mode || !musicPlayer.stopped())
-        {
-          musicPlayer.stopPlaying();
-        }
-
-        if (0 == soundInterval)
-        {
-          soundInterval = random(0,3);
-        }
-        else
-        {
-          soundInterval--;
-        }
-        
-        baseInterval = getInterval ();
-  
-        adjustment = random(-(baseInterval/5)*2.5,(baseInterval/5)*2.5 + 1);
-        
-        //Serial.println ("Adjustment is " + String(adjustment));
-        waitInterval = (baseInterval + adjustment) * MINUTE / 1000; //need it in seconds
-        iteration = 0;
-        
-      }
-      else
-      {
-        writeToLog ("Daytime");
-        waitInterval = 10 * MINUTE / 1000;
-        iteration = 0;
-      }
-    }
-
-    iteration++;
-    
-    if (startTest())
-    {
-       test(); 
-    }    
-  }
-  
-  sleep();
 }
 
 // plays all sounds on the sound SD card for 10 seconds
