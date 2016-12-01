@@ -322,6 +322,7 @@ void loop ()
           {
              failure[MEDIA_SD_CARD_FAILURE] = true; 
           }
+          writeToLog (String(patternFiles[patternIndex]));
         }
         
         if (0x2 & mode)
@@ -343,6 +344,8 @@ void loop ()
              failure[SOUND_FAILURE] = true;
              error(0);//generic error 
           }
+
+          writeToLog (String(soundFiles[soundIndex]));
         }
   
         actionStart = millis();
