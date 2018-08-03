@@ -7,11 +7,13 @@ const int RESET_BUTTON = A3;
 const int SOUND_BUTTON = A4;
 const int LIGHT_BUTTON = A5;
 const int DONE_PIN = A2;
-const int LED_PIN_1 = 12;
-const int LED_PIN_2 = 11;
-const int NUM_LEDS = 4;
 
-Adafruit_NeoPixel strips[2] = {Adafruit_NeoPixel(NUM_LEDS, LED_PIN_1, NEO_GRB + NEO_KHZ800),Adafruit_NeoPixel(NUM_LEDS, LED_PIN_2, NEO_GRB + NEO_KHZ800)};
+const int LED_PIN = 11;
+const int NUM_LEDS = 32;
+
+unsigned value = 1;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 #define VS1053_RESET   -1
 #define VS1053_CS       6     // VS1053 chip select pin (output)
 #define VS1053_DCS     10     // VS1053 Data/command select pin (output)
@@ -27,38 +29,36 @@ void setup() {
    * DEBUG CODE
    */
 
-  while ( ! Serial ) { delay( 1 ); }
+ // while ( ! Serial ) { delay( 1 ); }
   Serial.begin(9600);
 
   Serial.println("setup!!!");
   if (! musicPlayer.begin()) { // initialise the music player
      Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
-     while (1);
+    // while (1);
   }
  
-  strips[0].begin();
-  strips[1].begin();
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < NUM_LEDS; j++) {
-      strips[i].setPixelColor(j, 0, 0, 0); //pixel num, r, g, b
-    }
-    strips[i].show();
+  strip.begin();
+  
+  for (int j = 0; j < NUM_LEDS; j++) {
+    strip.setPixelColor(j, 0, 0, 0); //pixel num, r, g, b
   }
+  strip.show();
+  
 
   delay(1000);
   musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
   if (!SD.begin(CARDCS)) {
     Serial.println(F("SD failed, or not present"));
-    while (1);  // don't do anything more
+    //while (1);  // don't do anything more
   }
   Serial.println("SD OK!");
   
-  for (int i = 0; i < 2; i++) {
-    for (int j = 0; j < NUM_LEDS; j++) {
-      strips[i].setPixelColor(j, 255, 255, 255); //pixel num, r, g, b
-    }
-    strips[i].show();
+  for (int j = 0; j < NUM_LEDS; j++) {
+    strip.setPixelColor(j, 255, 255, 255); //pixel num, r, g, b
   }
+  strip.show();
+  
 
   musicPlayer.setVolume(2,2);
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
@@ -99,46 +99,43 @@ void setup() {
     //choose random light file and start running
 }
 
+
+
 void loop() {
   // repeatedly set the DONE pin HIGH and LOW
   if (digitalRead(RESET_BUTTON) == LOW) {
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < NUM_LEDS; j++) {
-        strips[i].setPixelColor(j, 0, 0, 0); //pixel num, r, g, b
-      }
-      strips[i].show();
+    
+   for (int j = 0; j < NUM_LEDS; j++) {
+    strip.setPixelColor(j, 0,0,0); //pixel num, r, g, b
     }
+    strip.show();
+
     musicPlayer.stopPlaying();
-    while (1) {
+
+    while(1) {
+  
       digitalWrite(DONE_PIN, HIGH);
       delay(1);
       digitalWrite(DONE_PIN, LOW);
       delay(1);
     }
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < NUM_LEDS; j++) {
-        strips[i].setPixelColor(j, 255, 0, 0); //pixel num, r, g, b
-      }
-      strips[i].show();
-    }
+    
   }
 
+  
+
   if (digitalRead(SOUND_BUTTON) == LOW) {
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < NUM_LEDS; j++) {
-        strips[i].setPixelColor(j, 0, 255, 0); //pixel num, r, g, b
-      }
-      strips[i].show();
+     for (int j = 0; j < NUM_LEDS; j++) {
+      strip.setPixelColor(j, 0, 255, 0); //pixel num, r, g, b
     }
+    strip.show();
   }
 
   if (digitalRead(LIGHT_BUTTON) == LOW) {
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < NUM_LEDS; j++) {
-        strips[i].setPixelColor(j, 255, 255, 0); //pixel num, r, g, b
-      }
-      strips[i].show();
+     for (int j = 0; j < NUM_LEDS; j++) {
+      strip.setPixelColor(j, 255, 255, 0); //pixel num, r, g, b
     }
+    strip.show();
   }
 
 }
