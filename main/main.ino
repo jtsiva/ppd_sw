@@ -1,6 +1,5 @@
 #include <Adafruit_VS1053.h>
 #include <SD.h>
-#include <I2S.h>
 #include <Adafruit_NeoPixel.h>
 
 const int RESET_BUTTON = A3;
@@ -27,13 +26,13 @@ void setup() {
    * DEBUG CODE
    */
 
-  while ( ! Serial ) { delay( 1 ); }
+  //while ( ! Serial ) { delay( 1 ); }
   Serial.begin(9600);
 
   Serial.println("setup!!!");
   if (! musicPlayer.begin()) { // initialise the music player
-     Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
-     while (1);
+   //  Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
+    while (1);
   }
  
   strips[0].begin();
@@ -49,7 +48,7 @@ void setup() {
   musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
   if (!SD.begin(CARDCS)) {
     Serial.println(F("SD failed, or not present"));
-    while (1);  // don't do anything more
+ //   while (1);  // don't do anything more
   }
   Serial.println("SD OK!");
   
