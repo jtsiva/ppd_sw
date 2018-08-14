@@ -1,6 +1,17 @@
+#include <Adafruit_BLEEddystone.h>
+#include <Adafruit_BLEMIDI.h>
+#include <Adafruit_BLEGatt.h>
+#include <Adafruit_BluefruitLE_UART.h>
+#include <Adafruit_BLEBattery.h>
+#include <Adafruit_ATParser.h>
+#include <Adafruit_BLE.h>
+#include <Adafruit_BluefruitLE_SPI.h>
+
 #include <Adafruit_VS1053.h>
 #include <SD.h>
 #include <Adafruit_NeoPixel.h>
+
+#include "BluefruitConfig.h"
 
 const int RESET_BUTTON = A3;
 const int SOUND_BUTTON = A4;
@@ -9,6 +20,8 @@ const int DONE_PIN = A2;
 const int LED_PIN_1 = 12;
 const int LED_PIN_2 = 11;
 const int NUM_LEDS = 4;
+
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
 Adafruit_NeoPixel strips[2] = {Adafruit_NeoPixel(NUM_LEDS, LED_PIN_1, NEO_GRB + NEO_KHZ800),Adafruit_NeoPixel(NUM_LEDS, LED_PIN_2, NEO_GRB + NEO_KHZ800)};
 #define VS1053_RESET   -1
@@ -21,6 +34,20 @@ Adafruit_NeoPixel strips[2] = {Adafruit_NeoPixel(NUM_LEDS, LED_PIN_1, NEO_GRB + 
 Adafruit_VS1053_FilePlayer musicPlayer = 
   Adafruit_VS1053_FilePlayer(VS1053_RESET, VS1053_CS, VS1053_DCS, VS1053_DREQ, CARDCS);
 
+// A small helper
+void error(const __FlashStringHelper*err) {
+  Serial.println(err);
+  while (1);
+}
+
+void commLoop() {
+  bool done = true;
+
+  while (!done) {
+    
+  }
+}
+
 void setup() {
   /*
    * DEBUG CODE
@@ -29,10 +56,32 @@ void setup() {
   //while ( ! Serial ) { delay( 1 ); }
   Serial.begin(9600);
 
+  if ( !ble.begin(VERBOSE_MODE) )
+  {
+    error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
+  }
+  Serial.println( F("OK!") );
+
+  ble.echo(false);
+
+  Serial.println("Requesting Bluefruit info:");
+  /* Print Bluefruit information */
+  ble.info();
+
+  ble.verbose(false);  // debug info is a little annoying after this point!
+
+  /* Wait for connection */
+  while (! ble.isConnected()) {
+      delay(500);
+  }
+
+  commLoop();
+
+  digitalWrite(BLUEFRUIT_SPI_CS, HIGH);
+
   Serial.println("setup!!!");
   if (! musicPlayer.begin()) { // initialise the music player
-   //  Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
-    while (1);
+   error(F("Couldn't find VS1053, do you have the right pins defined?"));
   }
  
   strips[0].begin();
@@ -47,8 +96,7 @@ void setup() {
   delay(1000);
   musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
   if (!SD.begin(CARDCS)) {
-    Serial.println(F("SD failed, or not present"));
- //   while (1);  // don't do anything more
+    error(F("SD failed, or not present"));
   }
   Serial.println("SD OK!");
   
