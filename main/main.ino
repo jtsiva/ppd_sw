@@ -13,6 +13,9 @@
 
 #include "BluefruitConfig.h"
 
+#define MINIMUM_FIRMWARE_VERSION    "0.6.6"
+#define MODE_LED_BEHAVIOUR          "MODE"
+
 const int RESET_BUTTON = A3;
 const int SOUND_BUTTON = A4;
 const int LIGHT_BUTTON = A5;
@@ -41,10 +44,25 @@ void error(const __FlashStringHelper*err) {
 }
 
 void commLoop() {
-  bool done = true;
-
+  bool done = false;
+  char toSend[BUFSIZE+1];
+  int count = 0;
+  for (int i = 0; i < BUFSIZE; i++) {
+    toSend[i] = (char)(65 + (i % 26));
+  }
   while (!done) {
-    
+    Serial.print("[Send] ");
+    Serial.println(toSend);
+    ble.print("AT+BLEUARTTX=");
+    ble.println(toSend);
+
+    // check response stastus
+    if (! ble.waitForOK() ) {
+      Serial.println(F("Failed to send?"));
+    }
+    if (++count == 10) {
+      done = true;
+    }
   }
 }
 
@@ -74,6 +92,18 @@ void setup() {
   while (! ble.isConnected()) {
       delay(500);
   }
+
+  // LED Activity command is only supported from 0.6.6
+  if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) )
+  {
+    // Change Mode LED Activity
+    Serial.println(F("******************************"));
+    Serial.println(F("Change LED activity to " MODE_LED_BEHAVIOUR));
+    ble.sendCommandCheckOK("AT+HWModeLED=" MODE_LED_BEHAVIOUR);
+    Serial.println(F("******************************"));
+  }
+
+  delay(5000);
 
   commLoop();
 
