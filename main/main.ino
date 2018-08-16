@@ -74,6 +74,7 @@ void setup() {
   //while ( ! Serial ) { delay( 1 ); }
   Serial.begin(9600);
 
+ 
   if ( !ble.begin(VERBOSE_MODE) )
   {
     error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
@@ -107,6 +108,7 @@ void setup() {
 
   commLoop();
 
+  pinMode(BLUEFRUIT_SPI_CS, OUTPUT);
   digitalWrite(BLUEFRUIT_SPI_CS, HIGH);
 
   Serial.println("setup!!!");
@@ -219,3 +221,4 @@ void loop() {
   }
 
 }
+
